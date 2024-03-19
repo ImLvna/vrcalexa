@@ -7,4 +7,5 @@ esbuild.build({
   platform: "node",
   target: ["node21"],
   sourcemap: true,
+  loader: { ".node": "copy" },
 });

@@ -22,8 +22,13 @@
   "devDependencies": {
     "@biomejs/biome": "^1.5.1",
     "@types/node": "^20.10.8",
+    "@types/node-osc": "^6.0.3",
     "esbuild": "^0.19.11",
     "husky": "^8.0.3",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "node-osc": "^9.1.1",
+    "robotjs": "^0.6.0"
   }
 }
