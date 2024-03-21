@@ -95,22 +95,33 @@ server.on("message", ([addr, value]) => {
         break;
       }
     }
+    let enableAdminMode = 0;
 
     if (addr.slice(19).startsWith("Vol")) {
       if (!adminMode && volUp && volDown) {
-        adminMode = true;
-        firstAdminMode = true;
-        console.log("Admin Mode: ", adminMode);
-        client.send("/avatar/parameters/AdminMode", adminMode, dummyCallback);
+        enableAdminMode = 1;
       } else if (adminMode && volUp && volDown) {
-        adminMode = false;
-        console.log("Admin Mode: ", adminMode);
-        client.send("/avatar/parameters/AdminMode", adminMode, dummyCallback);
-        client.send("/input/MoveForward", 0, dummyCallback);
-        client.send("/input/LookLeft", 0, dummyCallback);
-        client.send("/input/LookRight", 0, dummyCallback);
+        enableAdminMode = -1;
       }
     }
+
+    if (addr.slice(19).startsWith("AdminMode"))
+      enableAdminMode = value ? 1 : -1;
+
+    if (enableAdminMode === 1) {
+      adminMode = true;
+      firstAdminMode = true;
+      console.log("Admin Mode: ", adminMode);
+      client.send("/avatar/parameters/AdminMode", adminMode, dummyCallback);
+    } else if (enableAdminMode === -1) {
+      adminMode = false;
+      console.log("Admin Mode: ", adminMode);
+      client.send("/avatar/parameters/AdminMode", adminMode, dummyCallback);
+      client.send("/input/MoveForward", 0, dummyCallback);
+      client.send("/input/LookLeft", 0, dummyCallback);
+      client.send("/input/LookRight", 0, dummyCallback);
+    }
+
     if (firstAdminMode) {
       firstAdminMode = false;
       return;
