@@ -4,4 +4,12 @@ declare module "node-osc" {
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     send(address: string, ...args: any[]): void;
   }
+
+  class Server {
+    constructor(port: number, host: string, callback?: () => void);
+    on(
+      event: "message",
+      callback: (data: [address: string, value: boolean]) => void,
+    ): void;
+  }
 }

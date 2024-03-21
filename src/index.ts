@@ -1,5 +1,5 @@
-import { Client } from "node-osc";
-import { getPixelColor, getScreenSize } from "robotjs";
+import { Client, Server } from "node-osc";
+import { getPixelColor, getScreenSize, keyTap } from "robotjs";
 
 const screenSize = getScreenSize();
 
@@ -15,7 +15,8 @@ const invalidScreenSizeError = new Error(
 
 let state = State.Idle;
 
-const osc = new Client("127.0.0.1", 9000);
+const client = new Client("127.0.0.1", 9000);
+const server = new Server(9001, "127.0.0.1");
 
 const dummyCallback = (err: Error | null) => {};
 
@@ -53,13 +54,13 @@ async function getState() {
   if (oldState !== state) {
     console.log("State:", state);
 
-    osc.send(
+    client.send(
       "/avatar/parameters/Listening",
       state === State.Listening,
       dummyCallback,
     );
 
-    osc.send(
+    client.send(
       "/avatar/parameters/Speaking",
       state === State.Speaking,
       dummyCallback,
@@ -70,6 +71,97 @@ async function getState() {
 setInterval(() => {
   getState();
 }, 100);
+
+let volUp = false;
+let volDown = false;
+let adminMode = false;
+let firstAdminMode = true;
+
+server.on("message", ([addr, value]) => {
+  if (addr.startsWith("/avatar/parameters/")) {
+    switch (addr.slice(19)) {
+      case "VolUp": {
+        if (!adminMode) {
+          volUp = value;
+          if (value) console.log("Volume Up");
+        }
+        break;
+      }
+      case "VolDown": {
+        volDown = value;
+        if (!adminMode) {
+          if (value) console.log("Volume Down");
+        }
+        break;
+      }
+    }
+
+    if (addr.slice(19).startsWith("Vol")) {
+      if (!adminMode && volUp && volDown) {
+        adminMode = true;
+        firstAdminMode = true;
+        console.log("Admin Mode: ", adminMode);
+        client.send("/avatar/parameters/AdminMode", adminMode, dummyCallback);
+      } else if (adminMode && volUp && volDown) {
+        adminMode = false;
+        console.log("Admin Mode: ", adminMode);
+        client.send("/avatar/parameters/AdminMode", adminMode, dummyCallback);
+        client.send("/input/MoveForward", 0, dummyCallback);
+        client.send("/input/LookLeft", 0, dummyCallback);
+        client.send("/input/LookRight", 0, dummyCallback);
+      }
+    }
+    if (firstAdminMode) {
+      firstAdminMode = false;
+      return;
+    }
+
+    switch (addr.slice(19)) {
+      // Mute button
+      case "MuteButton": {
+        // Turn left
+        if (adminMode) {
+          if (value) {
+            console.log("Turning Left");
+            client.send("/input/LookLeft", 1, dummyCallback);
+          } else client.send("/input/LookLeft", 0, dummyCallback);
+        } else {
+          console.log("Toggling Mute");
+          keyTap("v");
+        }
+        break;
+      }
+
+      // Listen button
+      case "Listen": {
+        // Turn right
+        if (adminMode) {
+          if (value) {
+            console.log("Turning right");
+            client.send("/input/LookRight", 1, dummyCallback);
+          } else client.send("/input/LookRight", 0, dummyCallback);
+        } else {
+          // todo: implement listen button
+        }
+        break;
+      }
+
+      // Vol Up button
+      case "VolUp": {
+        // Move Forward
+        if (adminMode) {
+          if (value) {
+            console.log("Moving Forward");
+            client.send("/input/MoveForward", 1, dummyCallback);
+          } else client.send("/input/MoveForward", 0, dummyCallback);
+        } else {
+          // Todo
+        }
+        break;
+      }
+    }
+  }
+});
 
 console.log(
   "Program running. Make Sure the Alexa App is visible in the top left of the screen.",
