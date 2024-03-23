@@ -3,15 +3,29 @@ import { getPixelColor, getScreenSize, keyTap } from "robotjs";
 
 const screenSize = getScreenSize();
 
+const coordinates =
+  screenSize.width === 1280 && screenSize.height === 800
+    ? {
+        listen: [50, 50],
+        speak: [50, 190],
+      }
+    : screenSize.width === 1366 && screenSize.height === 768
+      ? {
+          listen: [50, 25],
+          speak: [50, 95],
+        }
+      : screenSize.width === 1280 && screenSize.height === 720
+        ? {
+            listen: [50, 50],
+            speak: [50, 145],
+          }
+        : null;
+
 enum State {
   Idle = "Idle",
   Listening = "Listening",
   Speaking = "Speaking",
 }
-
-const invalidScreenSizeError = new Error(
-  "Program not calibrated for this screen size. Please use 1280x1080 on 150% zoom or 1366x768 on 100% zoom.",
-);
 
 let state = State.Idle;
 
@@ -21,13 +35,11 @@ const server = new Server(9001, "127.0.0.1");
 const dummyCallback = (err: Error | null) => {};
 
 async function getListenPix() {
-  if (![1280, 1366].includes(screenSize.width)) throw invalidScreenSizeError;
-  return await getPixelColor(50, screenSize.width === 1280 ? 50 : 25);
+  return await getPixelColor(coordinates.listen[0], coordinates.listen[1]);
 }
 
 async function getSpeakPix() {
-  if (![1280, 1366].includes(screenSize.width)) throw invalidScreenSizeError;
-  return await getPixelColor(50, screenSize.width === 1280 ? 144 : 95);
+  return await getPixelColor(coordinates.speak[0], coordinates.speak[1]);
 }
 
 async function getState() {
@@ -105,8 +117,8 @@ server.on("message", ([addr, value]) => {
       }
     }
 
-    if (addr.slice(19).startsWith("AdminMode"))
-      enableAdminMode = value ? 1 : -1;
+    // if (addr.slice(19).startsWith("AdminMode"))
+    //   enableAdminMode = value ? 1 : -1;
 
     if (enableAdminMode === 1) {
       adminMode = true;
