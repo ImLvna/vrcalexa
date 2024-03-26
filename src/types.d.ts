@@ -9,7 +9,7 @@ declare module "node-osc" {
     constructor(port: number, host: string, callback?: () => void);
     on(
       event: "message",
-      callback: (data: [address: string, value: boolean]) => void,
+      callback: (data: [address: string, value: boolean | string]) => void,
     ): void;
   }
 }

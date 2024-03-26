@@ -1,3 +1,13 @@
+import {
+  lookLeft,
+  lookRight,
+  run,
+  stopLookLeft,
+  stopLookRight,
+  stopRun,
+  stopWalk,
+  walk,
+} from "../movement";
 import { send } from "../osc";
 
 export function disableAdminMode() {
@@ -19,7 +29,7 @@ export async function handleAdminInput(addr, value) {
     // Mute button
     case "MuteButton": {
       // Turn left
-      send("/input/LookLeft", value ? 1 : 0);
+      (value ? lookLeft : stopLookLeft)();
 
       break;
     }
@@ -27,15 +37,15 @@ export async function handleAdminInput(addr, value) {
     // Listen button
     case "Listen": {
       // Turn right
-      send("/input/LookRight", value ? 1 : 0);
+      (value ? lookRight : stopLookRight)();
       break;
     }
 
     // Vol Up button
     case "VolUp": {
       // Move Forward
-      send("/input/Run", value ? 1 : 0);
-      send("/input/MoveForward", value ? 1 : 0);
+      (value ? walk : stopWalk)();
+      (value ? run : stopRun)();
       break;
     }
   }

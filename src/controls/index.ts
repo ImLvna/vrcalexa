@@ -13,11 +13,11 @@ export function registerMessageHandler() {
     if (addr.startsWith("/avatar/parameters/")) {
       switch (addr.slice(19)) {
         case "VolUp": {
-          if (!adminMode) volUp = value;
+          if (!adminMode) volUp = value as boolean;
           break;
         }
         case "VolDown": {
-          volDown = value;
+          volDown = value as boolean;
           break;
         }
       }
